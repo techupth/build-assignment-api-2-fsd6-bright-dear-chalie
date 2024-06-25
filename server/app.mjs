@@ -20,7 +20,7 @@ app.get("/assignments", async (req, res) => {
     });
   }
   return res.status(200).json({
-    data: result.rows[0],
+    data: result.rows,
   });
 });
 
