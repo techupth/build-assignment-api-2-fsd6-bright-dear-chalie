@@ -147,7 +147,7 @@ app.put('/assignments/:assignmentId', async (req, res) => {
   } catch (error) {
     // console.log(error);
     return res.status(500).json({
-      message: 'Server could not create assignment because database connection'
+      message: 'Server could not update assignment because database connection'
     });
   }
 
@@ -162,6 +162,37 @@ app.put('/assignments/:assignmentId', async (req, res) => {
 });
 
 //deleting by ID
+app.delete('/assignments/:assignmentId', async (req, res) => {
+  // logic ใน ก ลบข้อมูลของ assignment ด้วย Id ใน database
+  // 1) Access ตัว Endpoint Parameter ด้วย req.params
+  // และ ข้อมุล assignment ที่ Client ส่งมาแก้ไขจาก Body ของ Request
+  // 2) เขียน Query เพื่อลบ ข้อมูล assignment ด้วย Connection Pool
+  // 3) Return ตัว Response กลับไปหา Client
+
+  const { assignmentId } = req.params;
+
+  let result;
+
+  try {
+    result = await connectionPool.query(
+      `delete from assignments where assignment_id = $1`,
+      [assignmentId]
+    );
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Server could not delete assignment because database connection'
+    });
+  }
+
+  // console.log(result);
+  if (!result.rowCount) {
+    return res.status(404).json({
+      message: 'Server could not find a requested assignment to update'
+    });
+  }
+
+  return res.status(200).json({ message: 'Deleted assignment sucessfully' });
+});
 
 app.listen(port, () => {
   console.log(`Server is running at ${port}`);
