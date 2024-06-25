@@ -43,7 +43,7 @@ app.post('/assignments', async (req, res) => {
     );
     return res.status(201).json({ message: 'Created assignment sucessfully' });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return res.status(500).json({
       message: 'Server could not create assignment because database connection'
     });
@@ -105,6 +105,62 @@ app.get('/assignments/:assignmentId', async (req, res) => {
 });
 
 //updating by ID
+app.put('/assignments/:assignmentId', async (req, res) => {
+  // logic ใน ก แก้ไขข้อมูลของ assignment ด้วย Id ใน database
+  // 1) Access ตัว Endpoint Parameter ด้วย req.params
+  // และ ข้อมุล assignment ที่ Client ส่งมาแก้ไขจาก Body ของ Request
+  // 2) เขียน Query เพื่อแก้ไข ข้อมูล assignment ด้วย Connection Pool
+  // 3) Return ตัว Response กลับไปหา Client
+
+  const { assignmentId } = req.params;
+  const updatedAssignment = { ...req.body, updated_at: new Date() };
+
+  if (
+    !updatedAssignment.title ||
+    !updatedAssignment.content ||
+    !updatedAssignment.category
+  ) {
+    return res.status(400).json({
+      message:
+        'Server could not create assignment because there are missing data from client'
+    });
+  }
+
+  let result;
+
+  try {
+    result = await connectionPool.query(
+      `update assignments
+       set title = $2, 
+       content = $3, 
+       category = $4, 
+       updated_at = $5 
+       where assignment_id = $1`,
+      [
+        assignmentId,
+        updatedAssignment.title,
+        updatedAssignment.content,
+        updatedAssignment.category,
+        updatedAssignment.updated_at
+      ]
+    );
+  } catch (error) {
+    // console.log(error);
+    return res.status(500).json({
+      message: 'Server could not create assignment because database connection'
+    });
+  }
+
+  // console.log(result);
+  if (!result.rowCount) {
+    return res.status(404).json({
+      message: 'Server could not find a requested assignment to update'
+    });
+  }
+
+  return res.status(200).json({ message: 'Updated assignment sucessfully' });
+});
+
 //deleting by ID
 
 app.listen(port, () => {
