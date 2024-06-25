@@ -50,6 +50,29 @@ app.post('/assignments', async (req, res) => {
   }
 });
 
+//reading all
+app.get('/assignments', async (req, res) => {
+  // logic ใน ก เก็บข้อมูลของ assignments ลงใน database
+  // 1) เขียน Query เพื่ออ่าน ข้อมูล assignment ด้วย Connection Pool
+  // 2) Return ตัว Response กลับไปหา Client ว่าสร้างสำเร็จ
+
+  let results;
+
+  try {
+    results = await connectionPool.query(`select * from assignments`);
+  } catch {
+    return res.status(500).json({
+      message: 'Server could not read assignments because database connection'
+    });
+  }
+
+  if (!results.rows.length) {
+    return res.status(404).json({ message: 'No assignments found' });
+  }
+
+  return res.status(200).json({ data: results.rows });
+});
+
 app.listen(port, () => {
   console.log(`Server is running at ${port}`);
 });
