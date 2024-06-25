@@ -52,7 +52,7 @@ app.post('/assignments', async (req, res) => {
 
 //reading all
 app.get('/assignments', async (req, res) => {
-  // logic ใน ก เก็บข้อมูลของ assignments ลงใน database
+  // logic ใน ก อ่านข้อมูลของ assignments ใน database
   // 1) เขียน Query เพื่ออ่าน ข้อมูล assignment ด้วย Connection Pool
   // 2) Return ตัว Response กลับไปหา Client ว่าสร้างสำเร็จ
 
@@ -72,6 +72,40 @@ app.get('/assignments', async (req, res) => {
 
   return res.status(200).json({ data: results.rows });
 });
+
+//reading by ID
+app.get('/assignments/:assignmentId', async (req, res) => {
+  // logic ใน ก อ่านข้อมูลของ assignment ด้วย Id ใน database
+  // 1) Access ตัว Endpoint Parameter ด้วย req.params
+  // 2) เขียน Query เพื่ออ่าน ข้อมูล assignment ด้วย Connection Pool
+  // 3) Return ตัว Response กลับไปหา Client
+
+  const { assignmentId } = req.params;
+
+  let results;
+
+  try {
+    results = await connectionPool.query(
+      `select * from assignments where assignment_id=$1`,
+      [assignmentId]
+    );
+  } catch {
+    return res.status(500).json({
+      message: 'Server could not read assignment because database connection'
+    });
+  }
+
+  if (!results.rows.length) {
+    return res
+      .status(404)
+      .json({ message: 'Server could not find a requested assignment' });
+  }
+
+  return res.status(200).json({ data: results.rows[0] });
+});
+
+//updating by ID
+//deleting by ID
 
 app.listen(port, () => {
   console.log(`Server is running at ${port}`);
