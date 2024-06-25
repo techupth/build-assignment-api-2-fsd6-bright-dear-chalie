@@ -112,10 +112,12 @@ app.put("/assignments/:assignmentId", async (req, res) => {
     };
     await connectionPool.query(
       `
-          insert into assignments (title,content, category, length, user_id, status, created_at, updated_at, published_at) 
-          values ($1,$2,$3,$4,$5,$6,$7,$8,$9) 
+          update assignments 
+          set title = $2, content=$3, category=$4, length = $5, user_id = $6, status = $7, created_at = $8, updated_at = $9, published_at = $10
+          where assignment_id = $1
       `,
       [
+        assignmentIdFromClient,
         newAssignment.title,
         newAssignment.content,
         newAssignment.category,
@@ -133,6 +135,30 @@ app.put("/assignments/:assignmentId", async (req, res) => {
     });
   }
   return res.status(200).json({ message: "Updated assignment sucessfully" });
+});
+
+app.delete("/assignments/:assignmentId", async (req, res) => {
+  const assignmentIdFromClient = req.params.assignmentId;
+  try {
+    const assignmentIdFromServer = await connectionPool.query(
+      `select * from assignments where assignment_id = $1`,
+      [assignmentIdFromClient]
+    );
+    if (!assignmentIdFromServer.rowCount) {
+      return res.status(404).json({
+        message: "Server could not find a requested assignment to delete",
+      });
+    }
+    await connectionPool.query(
+      `delete from assignments where assignment_id = $1`,
+      [assignmentIdFromClient]
+    );
+  } catch {
+    return res.status(500).json({
+      message: "Server could not delete assignment because database connection",
+    });
+  }
+  return res.status(200).json({ message: "Deleted assignment sucessfully" });
 });
 
 app.listen(port, () => {
